@@ -1,14 +1,3 @@
-// Tiny Express server for uptime pings
-const express = require('express') || global.express;
-global.express = express;
-
-const app = express();
-app.get('/', (req, res) => res.send('Bot is running...'));
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
-
 // bot.js
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
@@ -19,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => res.send('WhatsApp bot running'));
 app.listen(PORT, () => console.log(`HTTP server running on port ${PORT}`));
 
-// Session path - must point to persistent storage on the server
+// Session path - persistent storage
 const SESSION_PATH = process.env.SESSION_PATH || './session';
 
 const client = new Client({
@@ -27,6 +16,7 @@ const client = new Client({
   puppeteer: { headless: true, args: ['--no-sandbox','--disable-setuid-sandbox'] }
 });
 
+// Questions flow
 const questions = [
   "Great! First, may I know your name?",
   "What is your email?",
@@ -40,7 +30,6 @@ let userAnswers = {};
 client.on('qr', (qr) => {
   console.log('--- QR RECEIVED — scan this with your WhatsApp ---');
   qrcode.generate(qr, { small: true });
-  console.log('If you can’t scan ASCII QR, open logs and copy the QR text to a QR generator app.');
 });
 
 client.on('ready', () => {
@@ -59,10 +48,10 @@ client.on('message', message => {
     return;
   }
 
-  // If conversation started, continue the Q&A
+  // Continue Q&A
   if (userProgress[from] !== undefined) {
     const step = userProgress[from];
-    userAnswers[from].push(message.body); // store original (not lowercased)
+    userAnswers[from].push(message.body);
 
     if (step < questions.length - 1) {
       userProgress[from]++;
